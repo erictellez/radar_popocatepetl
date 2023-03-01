@@ -6,4 +6,4 @@ Most of the software was developed using wradlib: https://github.com/wradlib/wra
 https://zenodo.org/record/7677676#.Y_603h_MK3A
 
 
-The Folder programs contains the code and the folder data contains some examples that comes out from the Furuno radar.
+The programs folder contains the code and the folder data contains some examples that comes out from the Furuno radar.

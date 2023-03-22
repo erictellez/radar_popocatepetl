@@ -1,0 +1,24 @@
+﻿#This script is to automatize the generation of the plots from Furuno radar and post them in the website
+#Author Eric Tellez, May 2022
+
+
+#First, we need to copy the last files from the FTPRadar folder which is the folder receiving the data from Altzomoni
+$Sourcefolder= "C:\Users\radar1\Desktop\Carpeta Inicial" #It must be FTPRadar
+$Targetfolder= "C:\Users\radar1\Desktop\Carpeta_Intermedia"  #Any other folder
+Get-ChildItem -Path $Sourcefolder -Recurse|
+Where-Object {
+  $_.LastWriteTime -gt [datetime]::Now.AddMinutes(-15000)  #Minutes since the last radar routine. If you change the radar routine you must change this parameter too.
+}| Copy-Item -Destination $Targetfolder
+
+
+#Then we need to execute the converter of the SCN files to a netCDF format
+$converter = 'C:\Users\radar1\Desktop\Convertidores\SCN2HDF5_Converter\SCN2HDF5_converter.exe'
+Start-Process -Filepath $converter -WorkingDirectory C:\Users\radar1\Desktop\Convertidores\SCN2HDF5_Converter\
+
+
+#Then we need to execute the python program inside wradlib environment
+powershell -command "& 'C:\Users\radar1\anaconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\radar1\anaconda3'; conda activate 'C:\Users\radar1\anaconda3\envs\wradlib'; python -i 'c:\Users\radar1\Desktop\Programas_Furuno\Furuno_H5.py';python -i 'c:\Users\radar1\Desktop\Programas_Furuno\H5_vol_CAPPI.py'"
+
+
+#Then we need to send the output files to de Argos server
+scp -r -P 8022 /explosiones/ u.geofisica@132.248.8.177:datos/

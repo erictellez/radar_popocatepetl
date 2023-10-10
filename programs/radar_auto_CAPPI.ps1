@@ -17,13 +17,14 @@ Start-Process -Filepath $converter -WorkingDirectory D:\Convertidores\SCN2HDF5_C
 
 
 #Then we need to execute the python program inside wradlib environment
-powershell -command "& 'C:\Users\radar1\anaconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\radar1\anaconda3'; conda activate 'C:\Users\radar1\anaconda3\envs\wradlib'; python 'c:\Users\radar1\Desktop\Furuno\plot_AllData_2D_H5.py'; python 'c:\Users\radar1\Desktop\Furuno\mosaic.py'; python 'c:\Users\radar1\Desktop\Furuno\vol-CAPPI_dbzh.py' "
+powershell -command "& 'C:\Users\radar1\anaconda3\shell\condabin\conda-hook.ps1' ; conda activate 'C:\Users\radar1\anaconda3'; conda activate 'C:\Users\radar1\anaconda3\envs\wradlib'; python 'c:\Users\radar1\Desktop\Furuno\plot_AllData_2D_H5.py'"
 
 
 #Then we need to send the output files to the Argos server
 #This line is useful after using ssh-keygen already setup in both machines
-scp -r -P 8022 D:/Carpeta_Imag/ u.geofisica@132.248.8.177:datos/
+scp -r -P 8022 D:/Variables_graficas/ u.geofisica@132.248.8.177:
 
 
-#Delete all the files but not the folders
-Get-ChildItem -Path D:/Carpeta_Imag/ -Recurse -File | Remove-Item
+
+
+python 'c:\Users\radar1\Desktop\Programas_Furuno\vol-CAPPI_dBzh.py'

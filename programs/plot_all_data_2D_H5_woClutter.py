@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 17 22:08:59 2022
+Created on Tue Aug 30 17:39:39 2022
 
 @author: Eric Tellez
-This software is to plot all the variables at all the elevation angles.
+This software is to plot all the variables at all the elevation angles but without the ground clutter.
 The plot draws the horizontal plane of an explosion seen from above. 
 
 
@@ -42,8 +42,6 @@ import matplotlib.pyplot as pl
 from osgeo import osr
 import glob
 import os.path
-import warnings
-warnings.filterwarnings('ignore')
 
 # define your cartesian reference system
 # For Mexico City: https://epsg.io/?q=Mexico
@@ -61,8 +59,6 @@ raw = wradlib.io.read_opera_hdf5(filename_with_path)
 filename = os.path.basename(filename_with_path) #Filename with extension
 file = os.path.splitext(filename)  #Tuple of string with filename and extension
 
-#dataset%d is the angle
-#dataset/data%d/ is the physical variable
 
 for i in range(10):  #This number has to change if the number of elevation angle changes
    
@@ -90,24 +86,29 @@ for i in range(10):  #This number has to change if the number of elevation angle
     timeGMT = timeGMT[:2]+":"+ timeGMT[2:]
     timeGMT = timeGMT[:5]+":"+ timeGMT[5:]
     
-    date = raw['what']['Local_date'].decode('UTF-8')
-    date = date[:4]+"-"+ date[4:]
-    date = date[:7]+"-"+ date[7:]
-    time = raw['what']['Local_time'].decode('UTF-8')
-    time = time[:2]+":"+ time[2:]
-    time = time[:5]+":"+ time[5:]
     
     #Coordinates
     sitecoords = (raw["where"]["lon"], 
                   raw["where"]["lat"],
                   raw["where"]["height"])
     
+    ##################################
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
+    
     #plot the possible amount of rain
     fig1= pl.figure(figsize=(10, 10))
     #ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity[:,0:200], #The first coordinate is angle and the second is radius
     #The line above is to cut the image right after the distance of Popocatepetl volcano
-    #RATE_rainfall_intensity[:,0:400] is 30 km of radius
-    ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -118,23 +119,34 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
+    """ To plot the exact point over the crater with a dotted white line
+    axe, ima = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
+                                              ranges=[12000],
+                                              angles=[165],
+                                              proj=None,
+                                              elev=elangle,
+                                              line=dict(color='white'),
+                                              circle={'edgecolor': 'white'},
+                                              )
+    """
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n Intensidad de lluvia [mm/h], Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n Intensidad de lluvia [mm/h], Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_rainfall='D:/Carpeta_Imag/rainfall/'
     fig1.savefig(folder_rainfall + file[0] + '_rainfall%d' % (i), dpi=100)  #To save the plot as an image
+    ################################################
     
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #plot the horizontal reflectivity
     fig2= pl.figure(figsize=(10, 10))
@@ -150,23 +162,34 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
+    """ To plot the exact point over the crater with a dotted white line
+    axe, ima = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
+                                              ranges=[12000],
+                                              angles=[165],
+                                              proj=None,
+                                              elev=elangle,
+                                              line=dict(color='white'),
+                                              circle={'edgecolor': 'white'},
+                                              )
+    """
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{}  {} local, {}  {} GMT \n Reflectividad [dBz],  Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{}  {} GMT \n Reflectividad [dBz],  Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_DBZH='D:/Carpeta_Imag/DBZH/'
     fig2.savefig(folder_DBZH + file[0] + '_DBZH%d' % (i), dpi=100) #To save the plot as an image
+    ###################################################
     
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #plot the radial velocity of the wind
     fig3= pl.figure(figsize=(10, 10))
@@ -182,23 +205,25 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n VRAD [m/s], Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n VRAD [m/s], Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_VRAD='D:/Carpeta_Imag/VRAD/'
     fig3.savefig(folder_VRAD + file[0] + '_VRAD%d' % (i),dpi=100)  #To save the plot as an image
+    #############################################
     
+    
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #plot
     fig4= pl.figure(figsize=(10, 10))
@@ -214,23 +239,25 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n ZDR [dB], Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n ZDR [dB], Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_ZDR='D:/Carpeta_Imag/ZDR/'
     fig4.savefig(folder_ZDR + file[0] + '_ZDR%d' % (i),dpi=100)  #To save the plot as an image
+    ###################################################
     
+    
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #Plot
     fig5= pl.figure(figsize=(10, 10))
@@ -246,23 +273,25 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n KDP [deg/km],  Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n KDP [deg/km],  Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_KDP='D:/Carpeta_Imag/KDP/'
     fig5.savefig(folder_KDP + file[0] +'_KDP%d' % (i),dpi=100)  #To save the plot as an image
+    ###########################################
     
+    
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #plot the differential propagation phase
     fig6= pl.figure(figsize=(10, 10))
@@ -278,23 +307,25 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n PHIDP [deg],  Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n PHIDP [deg],  Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_PHIDP='D:/Carpeta_Imag/PHIDP/'
     fig6.savefig(folder_PHIDP + file[0] + '_PHIDP%d' % (i),dpi=100)  #To save the plot as an image
+    ############################################
     
+    
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #Plot the copolar correlation coefficient
     fig7= pl.figure(figsize=(10, 10))
@@ -310,23 +341,25 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n RHOHV,   Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n RHOHV,   Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_RHOHV='D:/Carpeta_Imag/RHOHV/'
     fig7.savefig(folder_RHOHV + file[0] + '_RHOHV%d' % (i),dpi=100)  #To save the plot as an image
+    ####################################
     
+    
+    clmap = wradlib.clutter.filter_gabella(RATE_rainfall_intensity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
     
     #Plot the standard deviation of the wind velocity
     fig8= pl.figure(figsize=(10, 10))
@@ -342,19 +375,9 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=111,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
     xlabel = ax.set_xlabel('distancia [m]')
     ylabel = ax.set_ylabel('distancia [m]')
-    title = ax.set_title('{} {} local, {} {} GMT \n WRAD [m/s]  Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle))
+    title = ax.set_title('{} {} GMT \n WRAD [m/s]  Ángulo de elevación {}°'.format(dateGMT,timeGMT,elangle))
     cb = pl.colorbar(im, ax=ax)
     folder_WRAD='D:/Carpeta_Imag/WRAD/'
     fig8.savefig(folder_WRAD + file[0] + '_WRAD%d' % (i),dpi=100)  #To save the plot as an image

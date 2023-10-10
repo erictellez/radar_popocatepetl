@@ -43,8 +43,6 @@ import matplotlib.pyplot as pl
 from osgeo import osr
 import glob
 import os.path
-import warnings
-warnings.filterwarnings('ignore')
 
 # define your cartesian reference system
 # For Mexico City: https://epsg.io/?q=Mexico
@@ -101,17 +99,64 @@ for i in range(10):  #This number has to change if the number of elevation angle
                   raw["where"]["height"])
     
     #plot all the images in one figure
-    fig= pl.figure(figsize=(20, 10 ))
+    fig= pl.figure(figsize=(10, 5 ))
     #fig, ax = pl.subplots(nrows=2, ncols=4, sharex=True, sharey=True, figsize=(20, 10))
     fig.suptitle('{} {} Local, {} {} GMT \n Ángulo de elevación {}°'.format(date,time,dateGMT,timeGMT,elangle), fontsize=10)
     fig.supxlabel('distancia [m]', fontsize=10)
     fig.supylabel('distancia [m]', fontsize=10)
     pl.tight_layout()
     
+    
+    #################################
+    clmap = wradlib.clutter.filter_gabella(DBZH_horizontal_reflectivity,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(DBZH_horizontal_reflectivity, clmap)
+    
+    #plot the horizontal reflectivity
+    #ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity[:,0:200], #The first coordinate is angle and the second is radius
+    ax = fig.add_subplot(242, frameon=False)
+    pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
+                                  #reflectivity,
+                                  rf= 1/rscale,
+                                  az= azimuth,
+                                  elev= elangle,
+                                  fig= fig,
+                                  site= sitecoords,
+                                  #proj='cg', #Another type of projection
+                                  proj= proj, #Plot
+                                  ax=ax,
+                                  func='pcolormesh')
+    """ To plot the exact point over the crater with a dotted white line
+    axe, ima = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
+                                              ranges=[12000],
+                                              angles=[165],
+                                              proj=None,
+                                              elev=elangle,
+                                              line=dict(color='white'),
+                                              circle={'edgecolor': 'white'},
+                                              )
+    """
+    title = ax.set_title('Reflectividad [dBz]', fontsize=7)
+    cb = pl.colorbar(im, ax=ax)
+    cb.ax.tick_params(labelsize=6)  #size font of the colorbar
+    pl.rc('xtick', labelsize=6)    #size font of the x-axes
+    pl.rc('ytick', labelsize=6)    #size font of the y-axes
+    
+    
+    ######################################
+    data_no_clutter = wradlib.ipol.interpolate_polar(RATE_rainfall_intensity, clmap)
+    
     #plot the possible amount of rain
     #ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity[:,0:200], #The first coordinate is angle and the second is radius
-    #The line above is to cut the image right after the distance of Popocatepetl volcano corresponding
-    #to the data 200
+    #The line above is to cut the image right after the distance of Popocatepetl volcano
     ax = fig.add_subplot(241, frameon=False)
     #pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=True, right=False)
     
@@ -126,58 +171,31 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('Intensidad de lluvia [mm/h]', fontsize=10)
+    """ To plot the exact point over the crater with a dotted white line
+    axe, ima = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
+                                              ranges=[12000],
+                                              angles=[165],
+                                              proj=None,
+                                              elev=elangle,
+                                              line=dict(color='white'),
+                                              circle={'edgecolor': 'white'},
+                                              )
+    """
+    title = ax.set_title('Intensidad de lluvia [mm/h]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
     
-    #plot the horizontal reflectivity
-    #ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity[:,0:200], #The first coordinate is angle and the second is radius
-    ax = fig.add_subplot(242, frameon=False)
-    pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-    ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity,
-                                  #reflectivity,
-                                  rf= 1/rscale,
-                                  az= azimuth,
-                                  elev= elangle,
-                                  fig= fig,
-                                  site= sitecoords,
-                                  #proj='cg', #Another type of projection
-                                  proj= proj, #Plot
-                                  ax=ax,
-                                  func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
     
-    title = ax.set_title('Reflectividad [dBz]', fontsize=10)
-    cb = pl.colorbar(im, ax=ax)
-    cb.ax.tick_params(labelsize=6)  #size font of the colorbar
-    pl.rc('xtick', labelsize=6)    #size font of the x-axes
-    pl.rc('ytick', labelsize=6)    #size font of the y-axes
+    ##############################################
+    data_no_clutter = wradlib.ipol.interpolate_polar(VRAD_radial_velocity, clmap)
     
     #plot the radial velocity of the wind
     ax = fig.add_subplot(244, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(VRAD_radial_velocity[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(VRAD_radial_velocity,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -188,27 +206,19 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('VRAD [m/s]', fontsize=10)
+    title = ax.set_title('VRAD [m/s]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
     
+    ############################
+    data_no_clutter = wradlib.ipol.interpolate_polar(ZDR_reflection_factor_difference, clmap)
     #plot
     ax = fig.add_subplot(243, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(ZDR_reflection_factor_difference[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(ZDR_reflection_factor_difference,                                  
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,                                  
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -219,27 +229,30 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('ZDR [dB]', fontsize=10)
+
+    title = ax.set_title('ZDR [dB]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
+    
+    
+    clmap = wradlib.clutter.filter_gabella(KDP_propagation_phase_difference_rate_of_change,
+                                           wsize=5,   #Average of the pixels, good number 5
+                                           thrsnorain=0.0, # 
+                                           tr1=12, #Good number 12
+                                           n_p=6,  #Good number 6
+                                           tr2=3,  #Good number for ground clutter 3, good number to take out pollution? maybe 7
+                                           radial=False,
+                                           cartesian=False)
+    
+    data_no_clutter = wradlib.ipol.interpolate_polar(KDP_propagation_phase_difference_rate_of_change, clmap)
     
     #Plot
     ax = fig.add_subplot(245, frameon=False)
     #pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=True, right=False)
     #ax, im = wradlib.vis.plot_ppi(KDP_propagation_phase_difference_rate_of_change[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(KDP_propagation_phase_difference_rate_of_change,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -250,27 +263,21 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('KDP [deg/km]', fontsize=10)
+
+    title = ax.set_title('KDP [deg/km]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
+    
+    ##################################
+    data_no_clutter = wradlib.ipol.interpolate_polar(PHIDP_differential_propagation_phase, clmap)
     
     #plot the differential propagation phase
     ax = fig.add_subplot(246, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(PHIDP_differential_propagation_phase[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(PHIDP_differential_propagation_phase,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -281,27 +288,20 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('PHIDP [deg]', fontsize=10)
+    title = ax.set_title('PHIDP [deg]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
+    
+    #########################   
+    data_no_clutter = wradlib.ipol.interpolate_polar(RHOHV_copolar_correlation_coefficient, clmap)
     
     #Plot the copolar correlation coefficient
     ax = fig.add_subplot(247, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(RHOHV_copolar_correlation_coefficient[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(RHOHV_copolar_correlation_coefficient,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -312,27 +312,20 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('RHOHV', fontsize=10)
+    title = ax.set_title('RHOHV', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
     
+    #################################
+    data_no_clutter = wradlib.ipol.interpolate_polar(WRAD_doppler_velocity_spectrum_width, clmap)
+    
     #Plot the standard deviation of the wind velocity
     ax = fig.add_subplot(248, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(WRAD_doppler_velocity_spectrum_width[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(WRAD_doppler_velocity_spectrum_width,
+    ax, im = wradlib.vis.plot_ppi(data_no_clutter,
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -343,17 +336,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
                                   proj= proj, #Plot
                                   ax=ax,
                                   func='pcolormesh')
-    #To plot the exact point over the crater with a dotted white line
-    axe = wradlib.vis.plot_ppi_crosshair(site=sitecoords, 
-                                         ranges=[11200],
-                                         angles=[165],
-                                         proj=None,
-                                         elev=elangle,
-                                         line=dict(color='white'),
-                                         circle={'edgecolor': 'white'},
-                                         )
-    
-    title = ax.set_title('WRAD [m/s]', fontsize=10)
+    title = ax.set_title('WRAD [m/s]', fontsize=7)
     cb = pl.colorbar(im, ax=ax)
     cb.ax.tick_params(labelsize=6)
     pl.rc('xtick', labelsize=6) 
@@ -361,3 +344,4 @@ for i in range(10):  #This number has to change if the number of elevation angle
     
     folder_mosaic='D:/Carpeta_Imag/mosaic/'
     fig.savefig(folder_mosaic + file[0] + '_mosaic%d' % (i),dpi=100)  #To save the plot as an image
+

@@ -63,7 +63,7 @@ filename = os.path.basename(filename_with_path) #Filename with extension
 file = os.path.splitext(filename)  #Tuple of string with filename and extension
 
 
-for i in range(10):  #This number has to change if the number of elevation angle changes
+for i in range(8):  #This number has to change if the number of elevation angle changes
    
     RATE_rainfall_intensity=raw["dataset%d/data1/what" % (i + 1)]["offset"] +(raw["dataset%d/data1/what" % (i + 1)]["gain"])*raw["dataset%d/data1/data" % (i + 1)] #This dataset is not that important
     DBZH_horizontal_reflectivity=raw["dataset%d/data2/what" % (i + 1)]["offset"] +(raw["dataset%d/data2/what" % (i + 1)]["gain"])*raw["dataset%d/data2/data" % (i + 1)]
@@ -110,12 +110,11 @@ for i in range(10):  #This number has to change if the number of elevation angle
     
     #plot the possible amount of rain
     #ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity[:,0:200], #The first coordinate is angle and the second is radius
-    #The line above is to cut the image right after the distance of Popocatepetl volcano corresponding
-    #to the data 200
+    #The line above is to cut the image right after the distance of Popocatepetl volcano
     ax = fig.add_subplot(241, frameon=False)
     #pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=True, right=False)
     
-    ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity,
+    ax, im = wradlib.vis.plot_ppi(RATE_rainfall_intensity[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -146,7 +145,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     #ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity[:,0:200], #The first coordinate is angle and the second is radius
     ax = fig.add_subplot(242, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
-    ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity,
+    ax, im = wradlib.vis.plot_ppi(DBZH_horizontal_reflectivity[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -177,7 +176,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(244, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(VRAD_radial_velocity[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(VRAD_radial_velocity,
+    ax, im = wradlib.vis.plot_ppi(VRAD_radial_velocity[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -208,7 +207,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(243, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=False, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(ZDR_reflection_factor_difference[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(ZDR_reflection_factor_difference,                                  
+    ax, im = wradlib.vis.plot_ppi(ZDR_reflection_factor_difference[:,0:200],                                  
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -239,7 +238,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(245, frameon=False)
     #pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=True, right=False)
     #ax, im = wradlib.vis.plot_ppi(KDP_propagation_phase_difference_rate_of_change[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(KDP_propagation_phase_difference_rate_of_change,
+    ax, im = wradlib.vis.plot_ppi(KDP_propagation_phase_difference_rate_of_change[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -270,7 +269,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(246, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(PHIDP_differential_propagation_phase[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(PHIDP_differential_propagation_phase,
+    ax, im = wradlib.vis.plot_ppi(PHIDP_differential_propagation_phase[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -301,7 +300,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(247, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(RHOHV_copolar_correlation_coefficient[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(RHOHV_copolar_correlation_coefficient,
+    ax, im = wradlib.vis.plot_ppi(RHOHV_copolar_correlation_coefficient[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -332,7 +331,7 @@ for i in range(10):  #This number has to change if the number of elevation angle
     ax = fig.add_subplot(248, frameon=False)
     pl.tick_params(labelcolor='none', which='both', top=False, bottom=True, left=False, right=False)
     #ax, im = wradlib.vis.plot_ppi(WRAD_doppler_velocity_spectrum_width[:,0:200], #The first coordinate is angle and the second is radius
-    ax, im = wradlib.vis.plot_ppi(WRAD_doppler_velocity_spectrum_width,
+    ax, im = wradlib.vis.plot_ppi(WRAD_doppler_velocity_spectrum_width[:,0:200],
                                   #reflectivity,
                                   rf= 1/rscale,
                                   az= azimuth,
@@ -359,5 +358,5 @@ for i in range(10):  #This number has to change if the number of elevation angle
     pl.rc('xtick', labelsize=6) 
     pl.rc('ytick', labelsize=6)
     
-    folder_mosaic='D:/Carpeta_Imag/mosaic/'
-    fig.savefig(folder_mosaic + file[0] + '_mosaic%d' % (i),dpi=100)  #To save the plot as an image
+    #folder_mosaic='D:/Carpeta_Imag/mosaic/'
+    #fig.savefig(folder_mosaic + file[0] + '_mosaic%d' % (i),dpi=100)  #To save the plot as an image

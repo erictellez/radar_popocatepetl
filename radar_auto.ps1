@@ -23,8 +23,8 @@ powershell -command "& 'C:\Users\radar1\anaconda3\shell\condabin\conda-hook.ps1'
 
 #Then we need to send the output files to the Argos server
 #This line is useful after using ssh-keygen already setup in both machines
-scp -r -P 8022 D:/Carpeta_Imag/ u.geofisica@132.248.8.177:datos/
+scp -r -P 8022 [path_of_origin] [path_of_destination]
 
 
 #Delete all the files but not the folders
-Get-ChildItem -Path D:/Carpeta_Imag/ -Recurse -File | Remove-Item
+Get-ChildItem -Path [path_of_origin] -Recurse -File | Remove-Item

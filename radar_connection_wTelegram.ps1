@@ -22,8 +22,8 @@ if ( ($uno -match "False") -or ($dos -match "False") -or ($tres -match "False") 
     (New-Object -com SAPI.SpVoice).speak("Falló la conexión")
     
     #This piece of code is to send a message to Telegram when the connection fails
-    $Telegramtoken = "6156678877:AAEtwGzJSd3OqnXlScsYSfydQPMjgHDEXXY"
-    $Telegramchatid = "622176669"
+    $Telegramtoken = ""
+    $Telegramchatid = ""
     $Message = "Falló la conexión"
 
     [Net.ServicePointManager]::Expect100Continue = $true
